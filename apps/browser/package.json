@@ -1,31 +1,17 @@
 {
   "name": "browser",
-  "displayName": "Browser",
-  "version": "0.0.1",
-  "description": "Tracks what I'm doing in the browser",
-  "author": "frixaco <rr.ashurmatov.21@gmail.com>",
+  "type": "module",
   "scripts": {
-    "dev": "plasmo dev",
-    "build": "plasmo build",
-    "package": "plasmo package"
-  },
-  "dependencies": {
-    "plasmo": "0.89.2",
-    "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "dev:chrome": "bun build ./chrome/*.ts --outdir ./chrome --watch",
+    "dev:firefox": "bun build ./firefox/background.ts --outdir ./firefox --watch"
   },
   "devDependencies": {
-    "@ianvs/prettier-plugin-sort-imports": "4.1.1",
-    "@types/chrome": "0.0.258",
-    "@types/node": "20.11.5",
-    "@types/react": "18.2.48",
-    "@types/react-dom": "18.2.18",
-    "prettier": "3.2.4",
-    "typescript": "5.3.3"
+    "@types/bun": "latest"
   },
-  "manifest": {
-    "host_permissions": [
-      "https://*/*"
-    ]
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "chrome-types": "^0.1.310"
   }
 }

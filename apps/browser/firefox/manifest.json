@@ -1,0 +1,18 @@
+{
+  "manifest_version": 2,
+  "name": "whatmedoin",
+  "description": "",
+  "version": "1.0",
+  "permissions": ["activeTab", "tabs"],
+  "browser_action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "whatmedoin@example.com"
+    }
+  }
+}

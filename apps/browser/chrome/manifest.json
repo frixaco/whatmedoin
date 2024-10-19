@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "whatmedoin",
+  "description": "",
+  "version": "1.0",
+  "permissions": ["activeTab", "tabs", "webNavigation"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
