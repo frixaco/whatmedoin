@@ -4,9 +4,12 @@
     "dev": "bun run --hot src/index.ts"
   },
   "dependencies": {
+    "@libsql/client": "^0.14.0",
+    "drizzle-orm": "^0.35.2",
     "hono": "^4.6.5"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "^1.1.11",
+    "drizzle-kit": "^0.26.2"
   }
 }

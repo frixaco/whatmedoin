@@ -7,8 +7,8 @@
     - Arc
       These require browser extension:
       - Learning Japanese
+      - Listening to Music playlist on YouTube
       - Watching YouTube
-        - Listening to Music playlist
     - Cursor
     - WezTerm
     - Games are open (Steam, Hoyoplay, WuWa, ...)
@@ -25,3 +25,17 @@
   - Bun + C => executable
 - Android/iOS:
   - React Native app that's always running [x]
+
+## Data shapes
+
+- `type` - `browser_tab`, `app`, `phone`
+
+- Learning Japanese
+  - `url` (guidetojapanese.org)
+- Watching YouTube & Listening to Music playlist
+  - `url` (`&list=")
+  - `title`
+- Blender, Arc, Cursor, WezTerm, Steam, Hoyoplay, WuWa, ... open
+  - `title`
+- Using my phone
+  - `type` - `phone`
