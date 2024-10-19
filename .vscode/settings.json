@@ -1,0 +1,7 @@
+{
+  "svelte.enable-ts-plugin": true,
+  "rust-analyzer.checkOnSave": true,
+  "rust-analyzer.linkedProjects": [
+    "apps/desktop/src-tauri/Cargo.toml"
+  ]
+}
