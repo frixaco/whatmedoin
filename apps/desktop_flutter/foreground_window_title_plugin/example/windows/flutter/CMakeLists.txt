@@ -107,3 +107,7 @@ add_custom_target(flutter_assemble DEPENDS
   ${CPP_WRAPPER_SOURCES_PLUGIN}
   ${CPP_WRAPPER_SOURCES_APP}
 )
+
+# Add the foreground_window_title_plugin
+add_subdirectory(${PROJECT_SOURCE_DIR}/../foreground_window_title_plugin/windows plugins/foreground_window_title_plugin)
+target_link_libraries(${BINARY_NAME} PRIVATE foreground_window_title_plugin_plugin)

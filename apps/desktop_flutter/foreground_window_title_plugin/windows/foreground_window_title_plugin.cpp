@@ -45,13 +45,16 @@ namespace foreground_window_title_plugin
     HWND hwnd = GetForegroundWindow();
     if (hwnd)
     {
-      int length = GetWindowTextLength(hwnd);
+      int length = GetWindowTextLengthW(hwnd);
       if (length > 0)
       {
         std::vector<wchar_t> buffer(length + 1);
-        GetWindowText(hwnd, &buffer[0], length + 1);
-        std::wstring wide(buffer.begin(), buffer.end());
-        return std::string(wide.begin(), wide.end());
+        GetWindowTextW(hwnd, &buffer[0], length + 1);
+
+        int size_needed = WideCharToMultiByte(CP_UTF8, 0, &buffer[0], -1, NULL, 0, NULL, NULL);
+        std::string strTo(size_needed, 0);
+        WideCharToMultiByte(CP_UTF8, 0, &buffer[0], -1, &strTo[0], size_needed, NULL, NULL);
+        return strTo;
       }
     }
     return "Unknown";
