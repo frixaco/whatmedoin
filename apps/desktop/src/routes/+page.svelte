@@ -7,9 +7,9 @@
     // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
     activeWindowInfo = await invoke("get_active_window_info");
   }
-  setInterval(() => {
-    getActiveWindowInfo();
-  }, 1000);
+  // setInterval(() => {
+  //  getActiveWindowInfo();
+  // }, 1000);
 </script>
 
 <main class="container">
