@@ -2,6 +2,7 @@
   "name": "browser",
   "type": "module",
   "scripts": {
+    "dev": "bun build ./chrome/*.ts --outdir ./chrome --watch",
     "dev:chrome": "bun build ./chrome/*.ts --outdir ./chrome --watch",
     "dev:firefox": "bun build ./firefox/background.ts --outdir ./firefox --watch"
   },
