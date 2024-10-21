@@ -20,11 +20,20 @@
 ## Solutions tried
 
 - macOS, Windows, Linux:
-  - Tauri with x-win crate [x]
+  - Tauri with x-win crate - crashes for some reason
   - NPM lib: https://github.com/paymoapp/active-window
   - Bun + C => executable
+  - Flutter
+  - Rust CLI with x-win [✓]
 - Android/iOS:
-  - React Native app that's always running [x]
+  - React Native app that's always running
+  - Flutter [✓]
+- API
+  - Bun [✓]
+  - Rust + Tide
+- Browser extension
+  - Vanilla JS with Bun [✓]
+  - Rust + WASM
 
 ## Data shapes
 
