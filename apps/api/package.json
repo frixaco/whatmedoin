@@ -2,7 +2,9 @@
   "name": "api",
   "type": "module",
   "scripts": {
-    "dev": "bun run --hot src/index.ts"
+    "dev": "bun run --hot src/index.ts",
+    "migrate": "drizzle-kit migrate",
+    "push": "drizzle-kit push"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
