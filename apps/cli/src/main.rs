@@ -2,8 +2,8 @@ use dotenv::dotenv;
 use reqwest::blocking::Client;
 use serde_json::{self, json};
 use std::env;
-use std::thread::sleep;
-use std::time::Duration;
+// use std::thread::sleep;
+// use std::time::Duration;
 use x_win::{get_active_window, WindowInfo};
 
 fn send_event(client: &Client, endpoint: &str, active_window: &WindowInfo) {
@@ -34,19 +34,19 @@ fn main() {
     let api_url = env::var("API_URL").expect("API_URL not provided");
     let endpoint = api_url + "/new-event";
 
-    loop {
-        match get_active_window() {
-            Ok(active_window) => {
-                println!("active window: {:?}", active_window);
+    // loop {
+    match get_active_window() {
+        Ok(active_window) => {
+            println!("active window: {:?}", active_window);
 
-                send_event(&client, &endpoint, &active_window)
-            }
-            Err(e) => {
-                println!("x-win error: {:?}", e);
-            }
+            send_event(&client, &endpoint, &active_window)
         }
-
-        // sleep(Duration::from_secs(5));
-        sleep(Duration::from_secs(10 * 60));
+        Err(e) => {
+            println!("x-win error: {:?}", e);
+        }
     }
+
+    // sleep(Duration::from_secs(5));
+    // sleep(Duration::from_secs(10 * 60));
+    // }
 }
