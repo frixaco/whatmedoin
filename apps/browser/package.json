@@ -4,15 +4,15 @@
   "scripts": {
     "dev": "bun build ./chrome/*.ts --outdir ./chrome --watch",
     "dev:chrome": "bun build ./chrome/*.ts --outdir ./chrome --watch",
-    "dev:firefox": "bun build ./firefox/background.ts --outdir ./firefox --watch"
+    "dev:firefox": "bun build ./firefox/*.ts --outdir ./firefox --watch"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/firefox-webext-browser": "^120.0.4",
+    "chrome-types": "^0.1.310"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
-  "dependencies": {
-    "chrome-types": "^0.1.310"
-  }
+  "dependencies": {}
 }
