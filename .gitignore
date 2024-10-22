@@ -3,5 +3,8 @@ dist
 build
 target
 
+background.js
+popup.js
+
 .env*
 !.env.local
