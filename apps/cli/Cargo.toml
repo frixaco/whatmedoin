@@ -5,4 +5,7 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.5.20", features = ["derive"] }
+dotenv = "0.15.0"
+reqwest = { version = "0.12.8", features = ["json", "blocking"] }
+serde_json = "1.0.132"
 x-win = "1.10.3"

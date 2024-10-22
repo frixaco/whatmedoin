@@ -1,32 +1,52 @@
-use clap::Parser;
-use x_win::{get_active_window, XWinError};
+use dotenv::dotenv;
+use reqwest::blocking::Client;
+use serde_json::{self, json};
+use std::env;
+use std::thread::sleep;
+use std::time::Duration;
+use x_win::{get_active_window, WindowInfo};
 
-/// Simple program to greet a person
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-struct Args {
-    /// Name of the person to greet
-    #[arg(short, long)]
-    name: String,
+fn send_event(client: &Client, endpoint: &str, active_window: &WindowInfo) {
+    let response = client
+        .post(endpoint)
+        .json(&json!({
+            "app_name": active_window.info.name,
+            "title": active_window.title,
+            "url": active_window.info.path,
+            "type": "app",
+        }))
+        .send();
 
-    /// Number of times to greet
-    #[arg(short, long, default_value_t = 1)]
-    count: u8,
+    match response {
+        Ok(response) => {
+            println!("reqwest response: {:?}", response);
+        }
+        Err(e) => {
+            println!("reqwest error: {:?}", e);
+        }
+    }
 }
 
 fn main() {
-    let args = Args::parse();
+    dotenv().ok();
 
-    for _ in 0..args.count {
-        println!("Hello {}!", args.name);
-    }
+    let client = Client::new();
+    let api_url = env::var("API_URL").expect("API_URL not provided");
+    let endpoint = api_url + "/new-event";
 
-    match get_active_window() {
-        Ok(active_window) => {
-            println!("active window: {:#?}", active_window);
+    loop {
+        match get_active_window() {
+            Ok(active_window) => {
+                println!("active window: {:?}", active_window);
+
+                send_event(&client, &endpoint, &active_window)
+            }
+            Err(e) => {
+                println!("x-win error: {:?}", e);
+            }
         }
-        Err(XWinError) => {
-            println!("error occurred while getting the active window");
-        }
+
+        // sleep(Duration::from_secs(5));
+        sleep(Duration::from_secs(10 * 60));
     }
 }

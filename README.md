@@ -1,3 +1,9 @@
+## TODO
+
+- [ ] Make it more "public":
+  - [ ] Allow setting application names to track
+  - [ ] Allow setting browser tab titles and urls to track
+
 ## Tracks
 
 - macOS, Windows, Linux

@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
-import { eventTable } from "./db/schema";
+import { eventTable, EventType } from "./db/schema";
 import { desc } from "drizzle-orm";
 
 const app = new Hono();
@@ -12,11 +12,25 @@ const client = createClient({
 });
 const db = drizzle({ client });
 
+type NewEvent = {
+  app_name: string;
+  title: string;
+  type: EventType;
+  url: string;
+};
+
 app.post("/new-event", async (c) => {
-  const { date, title, type, url, text } = await c.req.json();
-  const result = await db
-    .insert(eventTable)
-    .values({ date, title, type, url, text });
+  const { app_name, title, type, url } = await c.req.json<NewEvent>();
+  console.log("new api event: ", { app_name, title, type, url });
+  const result = await db.insert(eventTable).values({
+    app_name,
+    title,
+    type,
+    url,
+    date: new Date().toLocaleString("en-US", { timeZone: "UTC" }),
+  });
+
+  console.log("db result: ", result);
   return c.json(result);
 });
 

@@ -1,9 +1,8 @@
 {
   "name": "api",
-  "type": "module",
   "scripts": {
     "dev": "bun run --hot src/index.ts",
-    "migrate": "drizzle-kit migrate",
+    "generate": "drizzle-kit generate",
     "push": "drizzle-kit push"
   },
   "dependencies": {

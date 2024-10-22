@@ -5,8 +5,7 @@
   "scripts": {},
   "keywords": [],
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/*"
   ],
   "author": "frixaco <rr.ashurmatov.21@gmail.com>"
 }
