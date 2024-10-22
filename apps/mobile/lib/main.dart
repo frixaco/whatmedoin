@@ -1,7 +1,100 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import "package:http/http.dart" as http;
+import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 void main() {
   runApp(const MyApp());
+}
+
+void startBackgroundService() {
+  final service = FlutterBackgroundService();
+  service.startService();
+}
+
+void stopBackgroundService() {
+  final service = FlutterBackgroundService();
+  service.invoke("stop");
+}
+
+Future<void> initializeService() async {
+  final service = FlutterBackgroundService();
+
+  await service.configure(
+    iosConfiguration: IosConfiguration(
+      autoStart: true,
+      onForeground: onStart,
+      onBackground: onIosBackground,
+    ),
+    androidConfiguration: AndroidConfiguration(
+      autoStart: true,
+      onStart: onStart,
+      isForegroundMode: false,
+      autoStartOnBoot: true,
+    ),
+  );
+}
+
+@pragma('vm:entry-point')
+Future<bool> onIosBackground(ServiceInstance service) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  DartPluginRegistrant.ensureInitialized();
+
+  return true;
+}
+
+Future<String> getAppName() async {
+  PackageInfo packageInfo = await PackageInfo.fromPlatform();
+  return packageInfo.appName;
+}
+
+@pragma('vm:entry-point')
+void onStart(ServiceInstance service) async {
+  // Import the http package at the top of the file
+  // import 'package:http/http.dart' as http;
+
+  service.on("stop").listen((event) {
+    service.stopSelf();
+    print("background process is now stopped");
+  });
+
+  service.on("start").listen((event) {});
+
+  Future<void> makeHttpRequest() async {
+    final url = Uri.parse('http://localhost:3000/new-event');
+    final appName = await getAppName();
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          'type': 'mobile',
+          'app_name': appName,
+          'title': appName,
+          'url': appName,
+        }),
+      );
+      if (response.statusCode == 200) {
+        print('HTTP request successful');
+      } else {
+        print('HTTP request failed with status: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error making HTTP request: $e');
+    }
+  }
+
+  await makeHttpRequest();
+
+  Timer.periodic(const Duration(minutes: 15), (_) async {
+    await makeHttpRequest();
+    print("HTTP request sent at ${DateTime.now()}");
+  });
 }
 
 class MyApp extends StatelessWidget {
