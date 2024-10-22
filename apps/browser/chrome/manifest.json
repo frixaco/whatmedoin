@@ -3,7 +3,8 @@
   "name": "whatmedoin",
   "description": "",
   "version": "1.0",
-  "permissions": ["activeTab", "tabs", "webNavigation"],
+  "permissions": ["activeTab", "tabs", "webNavigation", "activeTab"],
+  "host_permissions": ["http://localhost/*"],
   "action": {
     "default_popup": "popup.html"
   },

@@ -8,6 +8,9 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status == "complete" && tab.active) {
     const response = await fetch(API_URL + "/new-event", {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         type: "browser_tab",
         title: tab.title,
