@@ -3,8 +3,8 @@
   "name": "whatmedoin",
   "description": "",
   "version": "1.0",
-  "permissions": ["activeTab", "tabs", "webNavigation", "activeTab"],
-  "host_permissions": ["http://localhost/*"],
+  "permissions": ["activeTab", "tabs", "webNavigation", "storage"],
+  "host_permissions": ["http://localhost/*", "https://*.up.railway.app/*"],
   "action": {
     "default_popup": "popup.html"
   },
