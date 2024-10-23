@@ -1,4 +1,4 @@
-package com.example.mobile
+package com.frixaco.mobile
 
 import io.flutter.embedding.android.FlutterActivity
 

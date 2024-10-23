@@ -6,7 +6,10 @@ import "package:http/http.dart" as http;
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeService();
+
   runApp(const MyApp());
 }
 
@@ -32,7 +35,7 @@ Future<void> initializeService() async {
     androidConfiguration: AndroidConfiguration(
       autoStart: true,
       onStart: onStart,
-      isForegroundMode: false,
+      isForegroundMode: true,
       autoStartOnBoot: true,
     ),
   );
@@ -53,9 +56,6 @@ Future<String> getAppName() async {
 
 @pragma('vm:entry-point')
 void onStart(ServiceInstance service) async {
-  // Import the http package at the top of the file
-  // import 'package:http/http.dart' as http;
-
   service.on("stop").listen((event) {
     service.stopSelf();
     print("background process is now stopped");
@@ -91,7 +91,7 @@ void onStart(ServiceInstance service) async {
 
   await makeHttpRequest();
 
-  Timer.periodic(const Duration(minutes: 15), (_) async {
+  Timer.periodic(const Duration(minutes: 1), (_) async {
     await makeHttpRequest();
     print("HTTP request sent at ${DateTime.now()}");
   });

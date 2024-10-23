@@ -1,6 +1,6 @@
 # mobile
 
-A new Flutter project.
+whatmedoin mobile app
 
 ## Getting Started
 

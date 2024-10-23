@@ -1,5 +1,5 @@
 name: mobile
-description: "A new Flutter project."
+description: "whatmedoin mobile app"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -35,9 +35,9 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  flutter_background_service: ^5.0.10
   http: ^1.2.2
   package_info_plus: ^8.1.0
+  flutter_background_service: ^5.0.10
 
 dev_dependencies:
   flutter_test:
