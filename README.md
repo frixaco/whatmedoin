@@ -1,6 +1,5 @@
 ## TODO
 
-- [ ] Improve data shape (e.g. `type` doesn't make sense)
 - [ ] Turn `cli` into CLI app and a daemon
   - [ ] `cli start` should start a background service on macOS, Windows, Linux
   - [ ] `cli stop` should stop the background service on macOS, Windows, Linux
@@ -16,6 +15,15 @@
 - Install bun, rustup, cargo-watch, Railway CLI
 - `bun install`
 - Set env variables in `.env` for each app
+
+## Chrome & Firefox extensions:
+
+**NOTE** Correct Chrome executable path, `openssl` and `ouch` CLI tools are required (or use alternatives)
+
+- `cd apps/browser`
+- `openssl genrsa -out key.pem 2048`
+- `bun build:chrome` and `/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --pack-extension=./chrome --pack-extension-key=./key.pem` to generate `chrome.crx`
+- `bun build:firefox` and `ouch c firefox/* firefox.zip && mv firefox.zip firefox.xpi` to generate `firefox.xpi`
 
 ## Research - enable cross compilation using `cross-rs` between macOS, Windows, Linux
 

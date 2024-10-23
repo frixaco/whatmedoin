@@ -5,6 +5,9 @@ target
 
 background.js
 popup.js
+*.pem
+*.crx
+*.xpi
 
 .env*
 !.env.local

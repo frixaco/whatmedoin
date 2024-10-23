@@ -4,7 +4,9 @@
   "scripts": {
     "dev": "bun build ./chrome/*.ts --outdir ./chrome --watch",
     "dev:chrome": "bun build ./chrome/*.ts --outdir ./chrome --watch",
-    "dev:firefox": "bun build ./firefox/*.ts --outdir ./firefox --watch"
+    "dev:firefox": "bun build ./firefox/*.ts --outdir ./firefox --watch",
+    "build:chrome": "bun build ./chrome/*.ts --outdir ./chrome",
+    "build:firefox": "bun build ./firefox/*.ts --outdir ./firefox"
   },
   "devDependencies": {
     "@types/bun": "latest",
