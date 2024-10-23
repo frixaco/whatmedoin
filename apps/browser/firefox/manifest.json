@@ -1,14 +1,16 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "whatmedoin",
   "description": "",
   "version": "1.0",
-  "permissions": ["activeTab", "tabs"],
-  "browser_action": {
+  "permissions": ["activeTab", "tabs", "webNavigation", "storage"],
+  "host_permissions": ["http://localhost/*", "https://*.up.railway.app/*"],
+  "action": {
     "default_popup": "popup.html"
   },
   "background": {
-    "scripts": ["background.js"]
+    "scripts": ["background.js"],
+    "type": "module"
   },
   "browser_specific_settings": {
     "gecko": {
