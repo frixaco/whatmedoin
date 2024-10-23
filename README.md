@@ -13,7 +13,7 @@
 
 ## Setup
 
-- Install bun, rustup, cargo-watch
+- Install bun, rustup, cargo-watch, Railway CLI
 - `bun install`
 - Set env variables in `.env` for each app
 
