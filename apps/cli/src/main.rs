@@ -1,6 +1,5 @@
 use clap::Command;
 use daemonize::Daemonize;
-use std::env;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::time::{self, Duration};
 
@@ -101,24 +100,23 @@ async fn run_periodic_task() {
     println!("Daemon shutting down gracefully");
 }
 
-#[cfg(target_os = "macos")]
+// #[cfg(any(target_os = "macos", target_os = "linux"))]
+// async fn start_daemon(log_file: std::fs::File, err_file: std::fs::File) -> std::io::Result<()> {
+//     use std::process::Command;
+
+//     let current_exe = std::env::current_exe()?;
+
+//     Command::new("nohup")
+//         .arg(current_exe)
+//         .arg("daemon-worker") // Special argument to indicate we're the worker process
+//         .stdout(std::process::Stdio::from(log_file))
+//         .stderr(std::process::Stdio::from(err_file))
+//         .spawn()?;
+
+//     Ok(())
+// }
+
 async fn start_daemon(log_file: std::fs::File, err_file: std::fs::File) -> std::io::Result<()> {
-    use std::process::Command;
-
-    let current_exe = std::env::current_exe()?;
-
-    Command::new("nohup")
-        .arg(current_exe)
-        .arg("daemon-worker") // Special argument to indicate we're the worker process
-        .stdout(std::process::Stdio::from(log_file))
-        .stderr(std::process::Stdio::from(err_file))
-        .spawn()?;
-
-    Ok(())
-}
-
-#[cfg(not(target_os = "macos"))]
-async fn start_daemon(log_file: std::fs::File, err_file: std::fs::File) {
     let daemonize = Daemonize::new()
         .pid_file("/tmp/active-window-monitor.pid")
         .chown_pid_file(true)
@@ -128,10 +126,13 @@ async fn start_daemon(log_file: std::fs::File, err_file: std::fs::File) {
 
     match daemonize.start() {
         Ok(_) => {
-            println!("daemonized");
-            run_periodic_task().await;
+            println!("daemon starting");
+            Ok(())
         }
-        Err(e) => eprintln!("daemonize error: {:?}", e),
+        Err(e) => {
+            eprintln!("Error starting daemon: {:?}", e);
+            Err(std::io::Error::new(std::io::ErrorKind::Other, e))
+        }
     }
 }
 
@@ -170,14 +171,32 @@ fn main() {
                     }
                 };
 
-                #[cfg(target_os = "macos")]
                 if let Err(e) = start_daemon(log_file, err_file).await {
-                    eprintln!("Failed to start daemon: {:?}", e);
+                    eprintln!("failed to start daemon: {:?}", e);
                     return;
                 }
 
-                #[cfg(not(target_os = "macos"))]
-                start_daemon(log_file, err_file).await;
+                let current_exe = std::env::current_exe().unwrap();
+                if let Err(e) = std::process::Command::new(current_exe)
+                    .arg("daemon-worker")
+                    .stdout(
+                        std::fs::OpenOptions::new()
+                            .append(true)
+                            .open("/tmp/active-window-monitor.log")
+                            .unwrap(),
+                    )
+                    .stderr(
+                        std::fs::OpenOptions::new()
+                            .append(true)
+                            .open("/tmp/active-window-monitor.err")
+                            .unwrap(),
+                    )
+                    .spawn()
+                {
+                    eprintln!("failed to spawn worker process: {:?}", e);
+                    return;
+                }
+                println!("daemon started");
             }
             Some(("stop", _)) => {
                 if let Ok(pid) = read_pid() {
