@@ -16,9 +16,16 @@
 - `bun install`
 - Set env variables in `.env` for each app
 
+## CLI
+
+- `cd apps/cli`
+- `bun run build`
+- Set `API_URL` in `.env` and update `run-cli.sh` if needed
+- `crontab -e` and type `* * * * * /Users/frixaco/personal/whatmedoin/apps/cli/run-cli.sh`
+
 ## Chrome & Firefox extensions:
 
-**NOTE** Correct Chrome executable path, `openssl` and `ouch` CLI tools are required (or use alternatives)
+**NOTE**: Correct Chrome executable path, `openssl` and `ouch` CLI tools are required (or use alternatives)
 
 - `cd apps/browser`
 - `openssl genrsa -out key.pem 2048`
