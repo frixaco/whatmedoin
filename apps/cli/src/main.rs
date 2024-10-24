@@ -1,5 +1,6 @@
 use clap::Command;
 use daemonize::Daemonize;
+use std::env;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::time::{self, Duration};
 
@@ -107,6 +108,9 @@ async fn run_periodic_task() {
 
 fn main() {
     let runtime = tokio::runtime::Runtime::new().unwrap();
+
+    #[cfg(target_os = "macos")]
+    env::set_var("OBJC_DISABLE_INITIALIZE_FORK_SAFETY", "YES");
 
     runtime.block_on(async {
         let matches = cli().get_matches();
