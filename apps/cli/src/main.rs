@@ -117,6 +117,24 @@ async fn start_daemon(log_file: std::fs::File, err_file: std::fs::File) -> std::
     Ok(())
 }
 
+#[cfg(not(target_os = "macos"))]
+async fn start_daemon(log_file: std::fs::File, err_file: std::fs::File) {
+    let daemonize = Daemonize::new()
+        .pid_file("/tmp/active-window-monitor.pid")
+        .chown_pid_file(true)
+        .working_directory("/tmp")
+        .stdout(log_file)
+        .stderr(err_file);
+
+    match daemonize.start() {
+        Ok(_) => {
+            println!("daemonized");
+            run_periodic_task().await;
+        }
+        Err(e) => eprintln!("daemonize error: {:?}", e),
+    }
+}
+
 fn main() {
     let runtime = tokio::runtime::Runtime::new().unwrap();
 
@@ -151,8 +169,6 @@ fn main() {
                         return;
                     }
                 };
-
-                println!("daemon started");
 
                 #[cfg(target_os = "macos")]
                 if let Err(e) = start_daemon(log_file, err_file).await {
