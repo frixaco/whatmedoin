@@ -13,7 +13,7 @@ async fn send_event(
     endpoint: &str,
     active_window: &WindowInfo,
 ) -> Result<(), reqwest::Error> {
-    let response = client
+    let _ = client
         .post(endpoint)
         .json(&json!({
             "platform": "desktop",
@@ -21,11 +21,9 @@ async fn send_event(
             "url": active_window.info.path,
         }))
         .send()
-        .await?
-        .json()
         .await?;
 
-    Ok(response)
+    Ok(())
 }
 
 fn get_active_window_info() -> Option<WindowInfo> {
@@ -65,22 +63,20 @@ fn is_running() -> bool {
 static RUNNING: AtomicBool = AtomicBool::new(true);
 
 async fn run_periodic_task() {
-    let mut interval = time::interval(Duration::from_secs(300));
-    let client = Client::new();
-    let endpoint = "https://affectionate-compassion-production.up.railway.app";
+    use futures::StreamExt;
 
-    let mut term_signal = signal_hook_tokio::Signals::new(&[
+    let mut interval = time::interval(Duration::from_secs(10));
+    let client = Client::new();
+    let endpoint = "https://affectionate-compassion-production.up.railway.app/activity";
+
+    let mut signals = signal_hook_tokio::Signals::new(&[
         signal_hook::consts::SIGTERM,
         signal_hook::consts::SIGINT,
     ])
     .unwrap();
+    let handle = signals.handle();
 
-    let handle = term_signal.handle();
-    let signal_task = tokio::spawn(async move {
-        use futures::StreamExt;
-        term_signal.next().await;
-        RUNNING.store(false, Ordering::SeqCst);
-    });
+    interval.tick().await;
 
     while RUNNING.load(Ordering::SeqCst) {
         tokio::select! {
@@ -93,26 +89,45 @@ async fn run_periodic_task() {
                     }
                 }
             }
-            else => {
+            Some(_) = signals.next() => {
                 println!("Shutdown signal received");
+                RUNNING.store(false, Ordering::SeqCst);
                 break;
             }
         }
     }
 
-    // Cleanup
     handle.close();
-    signal_task.abort();
     println!("Daemon shutting down gracefully");
+}
+
+#[cfg(target_os = "macos")]
+async fn start_daemon(log_file: std::fs::File, err_file: std::fs::File) -> std::io::Result<()> {
+    use std::process::Command;
+
+    let current_exe = std::env::current_exe()?;
+
+    Command::new("nohup")
+        .arg(current_exe)
+        .arg("daemon-worker") // Special argument to indicate we're the worker process
+        .stdout(std::process::Stdio::from(log_file))
+        .stderr(std::process::Stdio::from(err_file))
+        .spawn()?;
+
+    Ok(())
 }
 
 fn main() {
     let runtime = tokio::runtime::Runtime::new().unwrap();
 
-    #[cfg(target_os = "macos")]
-    env::set_var("OBJC_DISABLE_INITIALIZE_FORK_SAFETY", "YES");
-
     runtime.block_on(async {
+        if std::env::args().any(|arg| arg == "daemon-worker") {
+            let pid = std::process::id();
+            std::fs::write("/tmp/active-window-monitor.pid", pid.to_string()).unwrap();
+            run_periodic_task().await;
+            return;
+        }
+
         let matches = cli().get_matches();
 
         match matches.subcommand() {
@@ -137,23 +152,16 @@ fn main() {
                     }
                 };
 
-                let daemonize = Daemonize::new()
-                    .pid_file("/tmp/active-window-monitor.pid")
-                    .chown_pid_file(true)
-                    .working_directory("/tmp")
-                    .stdout(log_file)
-                    .stderr(err_file);
-
                 println!("daemon started");
 
-                match daemonize.start() {
-                    Ok(_) => {
-                        println!("daemonized");
-
-                        run_periodic_task().await;
-                    }
-                    Err(e) => eprintln!("daemonize error: {:?}", e),
+                #[cfg(target_os = "macos")]
+                if let Err(e) = start_daemon(log_file, err_file).await {
+                    eprintln!("Failed to start daemon: {:?}", e);
+                    return;
                 }
+
+                #[cfg(not(target_os = "macos"))]
+                start_daemon(log_file, err_file).await;
             }
             Some(("stop", _)) => {
                 if let Ok(pid) = read_pid() {
