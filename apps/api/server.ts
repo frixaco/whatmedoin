@@ -33,9 +33,10 @@ app.post("/activity", async (c) => {
     url,
     date: new Date().toLocaleString("en-US", { timeZone: "UTC" }),
   });
+  const savedResult = result.toObject();
 
-  console.log("db result: ", result);
-  return c.json(result);
+  console.log("db result: ", savedResult);
+  return c.json(savedResult, 201);
 });
 
 app.get("/activity", async (c) => {
