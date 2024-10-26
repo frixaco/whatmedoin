@@ -1,5 +1,4 @@
 use clap::Command;
-use daemonize::Daemonize;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::time::{self, Duration};
 
@@ -100,53 +99,34 @@ async fn run_periodic_task() {
     println!("Daemon shutting down gracefully");
 }
 
-// #[cfg(any(target_os = "macos", target_os = "linux"))]
-// async fn start_daemon(log_file: std::fs::File, err_file: std::fs::File) -> std::io::Result<()> {
-//     use std::process::Command;
-
-//     let current_exe = std::env::current_exe()?;
-
-//     Command::new("nohup")
-//         .arg(current_exe)
-//         .arg("daemon-worker") // Special argument to indicate we're the worker process
-//         .stdout(std::process::Stdio::from(log_file))
-//         .stderr(std::process::Stdio::from(err_file))
-//         .spawn()?;
-
-//     Ok(())
-// }
-
 async fn start_daemon(log_file: std::fs::File, err_file: std::fs::File) -> std::io::Result<()> {
-    let daemonize = Daemonize::new()
-        .pid_file("/tmp/active-window-monitor.pid")
-        .chown_pid_file(true)
-        .working_directory("/tmp")
-        .stdout(log_file)
-        .stderr(err_file);
+    // Instead of using the daemonize crate, we'll just spawn a new process
+    let current_exe = std::env::current_exe()?;
 
-    match daemonize.start() {
-        Ok(_) => {
-            println!("daemon starting");
-            Ok(())
-        }
-        Err(e) => {
-            eprintln!("Error starting daemon: {:?}", e);
-            Err(std::io::Error::new(std::io::ErrorKind::Other, e))
-        }
-    }
+    std::process::Command::new(current_exe)
+        .arg("daemon-worker")
+        .stdout(log_file)
+        .stderr(err_file)
+        .spawn()?;
+
+    Ok(())
 }
 
 fn main() {
-    let runtime = tokio::runtime::Runtime::new().unwrap();
-
-    runtime.block_on(async {
-        if std::env::args().any(|arg| arg == "daemon-worker") {
+    if std::env::args().any(|arg| arg == "daemon-worker") {
+        // We're in the daemon process
+        let runtime = tokio::runtime::Runtime::new().unwrap();
+        runtime.block_on(async {
             let pid = std::process::id();
             std::fs::write("/tmp/active-window-monitor.pid", pid.to_string()).unwrap();
             run_periodic_task().await;
-            return;
-        }
+        });
+        return;
+    }
 
+    // For CLI commands
+    let runtime = tokio::runtime::Runtime::new().unwrap();
+    runtime.block_on(async {
         let matches = cli().get_matches();
 
         match matches.subcommand() {
@@ -173,27 +153,6 @@ fn main() {
 
                 if let Err(e) = start_daemon(log_file, err_file).await {
                     eprintln!("failed to start daemon: {:?}", e);
-                    return;
-                }
-
-                let current_exe = std::env::current_exe().unwrap();
-                if let Err(e) = std::process::Command::new(current_exe)
-                    .arg("daemon-worker")
-                    .stdout(
-                        std::fs::OpenOptions::new()
-                            .append(true)
-                            .open("/tmp/active-window-monitor.log")
-                            .unwrap(),
-                    )
-                    .stderr(
-                        std::fs::OpenOptions::new()
-                            .append(true)
-                            .open("/tmp/active-window-monitor.err")
-                            .unwrap(),
-                    )
-                    .spawn()
-                {
-                    eprintln!("failed to spawn worker process: {:?}", e);
                     return;
                 }
                 println!("daemon started");
@@ -224,6 +183,11 @@ fn main() {
                 }
             }
             Some(("logs", _)) => {
+                match std::fs::read_to_string("/tmp/active-window-monitor.pid") {
+                    Ok(pid) => println!("daemon pid: {}", pid),
+                    Err(_) => println!("pid file doesn't exist"),
+                }
+
                 println!("--------------------------------");
                 match std::fs::read_to_string("/tmp/active-window-monitor.log") {
                     Ok(content) => {
@@ -246,5 +210,5 @@ fn main() {
             }
             _ => unreachable!(),
         }
-    })
+    });
 }

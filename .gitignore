@@ -11,3 +11,7 @@ popup.js
 
 .env*
 !.env.local
+
+bin
+obj
+.idea
