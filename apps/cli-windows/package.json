@@ -1,0 +1,7 @@
+{
+  "name": "cli-windows",
+  "scripts": {
+    "dev": "cargo watch -x run",
+    "build": "cargo build --release && cp target/release/wmd.exe ./wmd.exe"
+  }
+}

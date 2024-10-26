@@ -48,7 +48,7 @@ fn cli() -> Command {
 }
 
 fn read_pid() -> Result<i32, std::io::Error> {
-    std::fs::read_to_string("/tmp/active-window-monitor.pid")?
+    std::fs::read_to_string("/tmp/wmd.pid")?
         .trim()
         .parse()
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
@@ -99,14 +99,14 @@ async fn run_periodic_task() {
     println!("Daemon shutting down gracefully");
 }
 
-async fn start_daemon(log_file: std::fs::File, err_file: std::fs::File) -> std::io::Result<()> {
+async fn start_daemon(log_file: std::fs::File) -> std::io::Result<()> {
     // Instead of using the daemonize crate, we'll just spawn a new process
     let current_exe = std::env::current_exe()?;
 
     std::process::Command::new(current_exe)
         .arg("daemon-worker")
-        .stdout(log_file)
-        .stderr(err_file)
+        .stdout(log_file.try_clone()?)  // Clone the file handle for stdout
+        .stderr(log_file)               // Use original handle for stderr
         .spawn()?;
 
     Ok(())
@@ -118,7 +118,7 @@ fn main() {
         let runtime = tokio::runtime::Runtime::new().unwrap();
         runtime.block_on(async {
             let pid = std::process::id();
-            std::fs::write("/tmp/active-window-monitor.pid", pid.to_string()).unwrap();
+            std::fs::write("/tmp/wmd.pid", pid.to_string()).unwrap();
             run_periodic_task().await;
         });
         return;
@@ -136,22 +136,15 @@ fn main() {
                     return;
                 }
 
-                let log_file = match std::fs::File::create("/tmp/active-window-monitor.log") {
+                let log_file = match std::fs::File::create("/tmp/wmd.log") {
                     Ok(file) => file,
                     Err(e) => {
                         eprintln!("failed to create log file: {:?}", e);
                         return;
                     }
                 };
-                let err_file = match std::fs::File::create("/tmp/active-window-monitor.err") {
-                    Ok(file) => file,
-                    Err(e) => {
-                        eprintln!("failed to create error file: {:?}", e);
-                        return;
-                    }
-                };
 
-                if let Err(e) = start_daemon(log_file, err_file).await {
+                if let Err(e) = start_daemon(log_file).await {
                     eprintln!("failed to start daemon: {:?}", e);
                     return;
                 }
@@ -162,7 +155,7 @@ fn main() {
                     unsafe {
                         libc::kill(pid, libc::SIGTERM);
                     }
-                    let _ = std::fs::remove_file("/tmp/active-window-monitor.pid");
+                    let _ = std::fs::remove_file("/tmp/wmd.pid");
 
                     let mut attempts = 0;
                     while attempts < 10 {
@@ -173,9 +166,8 @@ fn main() {
                         attempts += 1;
                     }
 
-                    let _ = std::fs::remove_file("/tmp/active-window-monitor.log");
-                    let _ = std::fs::remove_file("/tmp/active-window-monitor.err");
-                    let _ = std::fs::remove_file("/tmp/active-window-monitor.pid");
+                    let _ = std::fs::remove_file("/tmp/wmd.log");
+                    let _ = std::fs::remove_file("/tmp/wmd.pid");
 
                     println!("daemon stopped");
                 } else {
@@ -183,28 +175,18 @@ fn main() {
                 }
             }
             Some(("logs", _)) => {
-                match std::fs::read_to_string("/tmp/active-window-monitor.pid") {
+                match std::fs::read_to_string("/tmp/wmd.pid") {
                     Ok(pid) => println!("daemon pid: {}", pid),
                     Err(_) => println!("pid file doesn't exist"),
                 }
 
                 println!("--------------------------------");
-                match std::fs::read_to_string("/tmp/active-window-monitor.log") {
+                match std::fs::read_to_string("/tmp/wmd.log") {
                     Ok(content) => {
                         content.lines().for_each(|line| println!("{}", line));
                     }
                     Err(_) => {
                         println!("log file doesn't exist");
-                    }
-                }
-
-                println!("--------------------------------");
-                match std::fs::read_to_string("/tmp/active-window-monitor.err") {
-                    Ok(content) => {
-                        content.lines().for_each(|line| println!("{}", line));
-                    }
-                    Err(_) => {
-                        println!("error file doesn't exist");
                     }
                 }
             }

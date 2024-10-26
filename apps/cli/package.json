@@ -1,7 +1,0 @@
-{
-  "name": "cli",
-  "scripts": {
-    "dev": "cargo watch -x run",
-    "build": "cargo build --release && cp target/release/cli ./cli"
-  }
-}
