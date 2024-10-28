@@ -12,6 +12,7 @@ export default {
     backgroundColor: "#ffffff",
   },
   ios: {
+    bundleIdentifier: "com.frixaco.whatmedoin",
     supportsTablet: true,
   },
   android: {
