@@ -14,6 +14,21 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
     `Got background fetch call at date: ${new Date(now).toISOString()}`
   );
 
+  await fetch(
+    "https://affectionate-compassion-production.up.railway.app/activity",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        platform: "mobile",
+        title: "whatmedoin",
+        url: "com.frixaco.whatmedoin",
+      }),
+    }
+  );
+
   // Be sure to return the successful result type!
   return BackgroundFetch.BackgroundFetchResult.NewData;
 });
@@ -23,7 +38,7 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
 // Note: This does NOT need to be in the global scope and CAN be used in your React components!
 async function registerBackgroundFetchAsync() {
   return BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
-    minimumInterval: 60 * 1, // 15 minutes
+    minimumInterval: 60 * 15, // 15 minutes
     stopOnTerminate: false, // android only,
     startOnBoot: true, // android only
   });
