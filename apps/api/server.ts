@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { logger } from "hono/logger";
+import { cors } from "hono/cors";
 import { Schema, model, connect } from "mongoose";
 
 interface Activity {
@@ -22,6 +23,8 @@ const app = new Hono();
 
 connect(process.env.DATABASE_URL!);
 
+app.use("/*", cors());
+
 app.use(logger());
 
 app.post("/activity", async (c) => {
@@ -41,7 +44,7 @@ app.post("/activity", async (c) => {
 
 app.get("/activity", async (c) => {
   const result = await Activity.find().sort({ date: -1 }).limit(1);
-  return c.json(result);
+  return c.json(result[0]);
 });
 
 export default app;
