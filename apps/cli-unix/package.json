@@ -2,6 +2,6 @@
   "name": "cli-unix",
   "scripts": {
     "dev": "cargo watch -x run",
-    "build": "cargo build --release && cp target/release/cli-unix ./cli-unix"
+    "build": "cargo build --release && cp target/release/wmd ./wmd"
   }
 }
