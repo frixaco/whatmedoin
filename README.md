@@ -4,16 +4,22 @@
 
 - macOS, Windows, Linux
 
-  - If I'm using certain apps - current foreground window
+  - If I'm using a browser:
+
+    - Learning Japanese - TK guide, animelon, JP YT channels open
+    - Listening to Music playlist on YouTube - "Music" playlist open
+    - Watching YouTube - None of the above
+
+  - If I'm using certain apps - current foreground window:
+
     - Blender
-    - Arc
-      These require browser extension:
-      - Learning Japanese
-      - Listening to Music playlist on YouTube
-      - Watching YouTube
-    - Cursor
     - WezTerm
-    - Games are open (Steam, Hoyoplay, WuWa, ...)
+    - Cursor
+    - Powershell
+    - Games (osu!, Elden Ring, WuWa, ...)
+    - Slack
+    - Anki
+    - Heptabase
 
 - Android/iOS - If requests are coming to server, then I'm on my phone
 
