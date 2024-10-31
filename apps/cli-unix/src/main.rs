@@ -6,6 +6,8 @@ use reqwest::Client;
 use serde_json::json;
 use x_win::{get_active_window, WindowInfo};
 
+const TRACKED_WINDOWS: [&str; 5] = ["WezTerm", "Cursor", "Slack", "Anki", "Heptabase"];
+
 async fn send_event(
     client: &Client,
     endpoint: &str,
@@ -81,9 +83,11 @@ async fn run_periodic_task() {
             _ = interval.tick() => {
                 println!("Checking active window...");
                 if let Some(window_info) = get_active_window_info() {
-                    match send_event(&client, endpoint, &window_info).await {
+                    if TRACKED_WINDOWS.contains(&window_info.info.name.as_str()) {
+                        match send_event(&client, endpoint, &window_info).await {
                         Ok(_) => println!("Successfully sent window info"),
-                        Err(e) => eprintln!("Failed to send window info: {:?}", e),
+                            Err(e) => eprintln!("Failed to send window info: {:?}", e),
+                        }
                     }
                 }
             }
@@ -105,8 +109,8 @@ async fn start_daemon(log_file: std::fs::File) -> std::io::Result<()> {
 
     std::process::Command::new(current_exe)
         .arg("daemon-worker")
-        .stdout(log_file.try_clone()?)  // Clone the file handle for stdout
-        .stderr(log_file)               // Use original handle for stderr
+        .stdout(log_file.try_clone()?) // Clone the file handle for stdout
+        .stderr(log_file) // Use original handle for stderr
         .spawn()?;
 
     Ok(())

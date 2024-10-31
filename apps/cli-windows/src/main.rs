@@ -9,6 +9,18 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::time::{self, Duration};
 use x_win::{get_active_window, WindowInfo};
 
+// TODO: Confirm the names
+const TRACKED_WINDOWS: [&str; 8] = [
+    "WezTerm",
+    "Cursor",
+    "Slack",
+    "Anki",
+    "Heptabase",
+    "osu!",
+    "Blender",
+    "pwsh",
+];
+
 static RUNNING: AtomicBool = AtomicBool::new(true);
 const APP_NAME: &str = "wmd";
 
@@ -93,9 +105,11 @@ async fn run_monitor() {
             _ = interval.tick() => {
                 log_to_file("Checking active window...");
                 if let Some(window_info) = get_active_window_info() {
-                    match send_event(&client, endpoint, &window_info).await {
-                        Ok(_) => log_to_file("Successfully sent window info"),
-                        Err(e) => log_to_file(&format!("Failed to send window info: {:?}", e)),
+                    if TRACKED_WINDOWS.contains(&window_info.info.name.as_str()) {
+                        match send_event(&client, endpoint, &window_info).await {
+                            Ok(_) => log_to_file("Successfully sent window info"),
+                            Err(e) => log_to_file(&format!("Failed to send window info: {:?}", e)),
+                        }
                     }
                 }
             }
