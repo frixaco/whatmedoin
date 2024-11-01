@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { StyleSheet, Text, View, Button } from "react-native";
+import { StyleSheet, Text, View, Button, Platform } from "react-native";
 import * as BackgroundFetch from "expo-background-fetch";
 import * as TaskManager from "expo-task-manager";
 
@@ -11,7 +11,7 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
   const now = Date.now();
 
   console.log(
-    `Got background fetch call at date: ${new Date(now).toISOString()}`
+    `Got background fetch call at date: ${new Date(now).toISOString()}`,
   );
 
   await fetch(
@@ -22,11 +22,11 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        platform: "mobile",
+        platform: Platform.OS,
         title: "whatmedoin",
         url: "com.frixaco.whatmedoin",
       }),
-    }
+    },
   );
 
   // Be sure to return the successful result type!
@@ -63,7 +63,7 @@ export default function Index() {
   const checkStatusAsync = async () => {
     const status = await BackgroundFetch.getStatusAsync();
     const isRegistered = await TaskManager.isTaskRegisteredAsync(
-      BACKGROUND_FETCH_TASK
+      BACKGROUND_FETCH_TASK,
     );
     setStatus(status);
     setIsRegistered(isRegistered);

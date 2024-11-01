@@ -4,7 +4,7 @@ import { cors } from "hono/cors";
 import { Schema, model, connect } from "mongoose";
 
 interface Activity {
-  platform: "browser" | "mobile" | "desktop";
+  platform: "browser" | "mobile" | "windows" | "macos";
   title: string; // tab title, app title
   url?: string; // tab url or empty
   date: string;

@@ -1,5 +1,40 @@
 # Simple app to track what I'm doing (almost) in real-time for macOS, Windows, Linux, Android, iOS, Chrome, Firefox
 
+# Binaries
+
+- [./apps/cli-macos/whatmedoin.dmg](./apps/cli-macos/whatmedoin.dmg)
+- [./apps/cli-windows/wmd.exe](./apps/cli-windows/wmd.exe)
+
+## Setup
+
+- Install Bun, rustup, cargo-watch, Railway CLI, Node.js, Xcode
+- `bun install`
+- Set env variables in `.env` for each app
+- For mobile app, follow React Native/Expo docs for Android Studio/Xcode setup
+
+## Windows CLI: [./apps/cli-windows](./apps/cli-windows)
+
+- `bun run build`
+- add the `wmd.exe` to PATH
+- (requires admin) `wmd install` to add to startup, `wmd start` to start, `wmd stop` to stop, `wmd uninstall` to remove from startup
+
+## Chrome & Firefox extensions: [./apps/browser/chrome/](./apps/browser/chrome/) and [./apps/browser/firefox/](./apps/browser/firefox/)
+
+**NOTE**: For Chrome, set correct Chrome executable path, make sure `openssl` and `ouch` CLI tools are available (or use alternatives)
+
+- Run `bun dev:chrome` or `bun dev:firefox`, then "Load unpacked"/"Load temporary add-on" in Chrome/Firefox
+
+- `openssl genrsa -out key.pem 2048` (Chrome requires this)
+- `bun build:chrome` and `/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --pack-extension=./chrome --pack-extension-key=./key.pem` to generate `chrome.crx`
+- `bun build:firefox` and `ouch c firefox/* firefox.zip && mv firefox.zip firefox.xpi` to generate `firefox.xpi`
+
+## macOS system tray app: [./apps/cli-macos/whatmedoin/](./apps/cli-macos/whatmedoin/)
+
+- To create `whatmedoin.app`:
+  - Open in the project in Xcode
+  - Product > Archive > Distribute App > Custom > Clone App
+- To package as `.dmg`, put `whatmedoin.app` inside `./cli-macos` and run `bun run package`
+
 ## Tracks
 
 - macOS, Windows, Linux
@@ -42,29 +77,6 @@
 - Browser extension
   - Vanilla JS/TS with Bun [✓]
   - Rust + WASM - have to compile to JS at the end, so no
-
-## Setup
-
-- Install Bun, rustup, cargo-watch, Railway CLI, Node.js
-- `bun install`
-- Set env variables in `.env` for each app
-- For mobile app, follow React Native/Expo docs for Android Studio/Xcode setup
-
-## CLI: [./apps/cli-unix](./apps/cli-unix) and [./apps/cli-windows](./apps/cli-windows)
-
-- `bun run build`
-- `./wmd start` for Linux/macOS
-- `./wmd.exe install` to add to startup, `./wmd.exe start` to start, `./wmd.exe stop` to stop, `./wmd.exe uninstall` to remove from startup (requires admin)
-
-## Chrome & Firefox extensions: [./apps/browser/chrome/](./apps/browser/chrome/) and [./apps/browser/firefox/](./apps/browser/firefox/)
-
-**NOTE**: For Chrome, set correct Chrome executable path, make sure `openssl` and `ouch` CLI tools are available (or use alternatives)
-
-- Run `bun dev:chrome` or `bun dev:firefox`, then "Load unpacked"/"Load temporary add-on" in Chrome/Firefox
-
-- `openssl genrsa -out key.pem 2048` (Chrome requires this)
-- `bun build:chrome` and `/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --pack-extension=./chrome --pack-extension-key=./key.pem` to generate `chrome.crx`
-- `bun build:firefox` and `ouch c firefox/* firefox.zip && mv firefox.zip firefox.xpi` to generate `firefox.xpi`
 
 ## TODO
 

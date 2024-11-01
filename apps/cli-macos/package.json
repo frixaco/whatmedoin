@@ -1,0 +1,6 @@
+{
+  "name": "cli-macos",
+  "scripts": {
+    "package": "hdiutil create -volname \"whatmedoin\" -srcfolder whatmedoin.app -ov -format UDZO whatmedoin.dmg"
+  }
+}
