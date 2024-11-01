@@ -27,6 +27,11 @@ function getActiveTab() {
 }
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("refresh")?.addEventListener("click", getActiveTab);
+  browser.storage.local.get("apiUrl").then((result) => {
+    if (result.apiUrl) {
+      document.getElementById("api-url").value = result.apiUrl;
+    }
+  });
   document.getElementById("set-api-url")?.addEventListener("click", async () => {
     if (document.getElementById("api-url").value === "") {
       document.getElementById("set-api-url-status").innerText = "Provide a URL";
@@ -35,8 +40,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     document.getElementById("set-api-url-status").innerText = "Setting...";
     const apiUrl = document.getElementById("api-url").value;
-    browser.storage.session.set({ apiUrl });
-    const storageValueCheck = await browser.storage.session.get("apiUrl");
+    browser.storage.local.set({ apiUrl });
+    const storageValueCheck = await browser.storage.local.get("apiUrl");
     if (storageValueCheck) {
       document.getElementById("set-api-url-status").innerText = "Success";
       document.getElementById("set-api-url-status").style.color = "green";

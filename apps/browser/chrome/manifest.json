@@ -4,7 +4,11 @@
   "description": "",
   "version": "1.0",
   "permissions": ["activeTab", "tabs", "webNavigation", "storage"],
-  "host_permissions": ["http://localhost/*", "https://*.up.railway.app/*"],
+  "host_permissions": [
+    "http://localhost/*",
+    "https://*.up.railway.app/*",
+    "https://*.frixaco.com/*"
+  ],
   "action": {
     "default_popup": "popup.html"
   },

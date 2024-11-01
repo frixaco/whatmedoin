@@ -32,6 +32,13 @@ function getActiveTab() {
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("refresh")?.addEventListener("click", getActiveTab);
 
+  browser.storage.local.get("apiUrl").then((result) => {
+    if (result.apiUrl) {
+      (document.getElementById("api-url") as HTMLInputElement).value =
+        result.apiUrl;
+    }
+  });
+
   document
     .getElementById("set-api-url")
     ?.addEventListener("click", async () => {

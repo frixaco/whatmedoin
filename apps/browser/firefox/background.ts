@@ -21,22 +21,27 @@ browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     }
 
     try {
-      const storageValue = await browser.storage.local.get("apiUrl");
+      const storageValue = await chrome.storage.local.get("apiUrl");
       const apiUrl = storageValue.apiUrl;
       if (!apiUrl || apiUrl === "") {
         console.warn("🟡 whatmedoin: No API URL provided");
         return;
       }
-      const response = await fetch(apiUrl + "/activity", {
+
+      const payload = {
+        platform: "browser",
+        title: tab.title,
+        url: tab.url,
+      };
+
+      console.log("Sending to", apiUrl, payload);
+
+      const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          platform: "browser",
-          title: tab.title,
-          url: tab.url,
-        }),
+        body: JSON.stringify(payload),
       });
       if (response.ok) {
         console.log("🟢 whatmedoin");
