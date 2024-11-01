@@ -5,6 +5,14 @@
 - [./apps/cli-macos/whatmedoin.dmg](./apps/cli-macos/whatmedoin.dmg)
 - [./apps/cli-windows/wmd.exe](./apps/cli-windows/wmd.exe)
 
+## TODO
+
+- [ ] Add rate-limiting (for browser, especially)
+- [ ] Make it more "public":
+  - [ ] Allow setting application names to track
+  - [ ] Allow setting browser tab titles and urls to track
+- [ ] Finish setting iOS app (Info.plist, ...)
+
 ## Setup
 
 - Install Bun, rustup, cargo-watch, Railway CLI, Node.js, Xcode
@@ -78,16 +86,6 @@
 - Browser extension
   - Vanilla JS/TS with Bun [✓]
   - Rust + WASM - have to compile to JS at the end, so no
-
-## TODO
-
-- [ ] Make it more "public":
-
-  - [ ] Allow setting application names to track
-  - [ ] Allow setting browser tab titles and urls to track
-
-- [ ] Finish setting iOS app (Info.plist, ...)
-- [ ] Check out Firefox add-on signing
 
 ## Research - enable cross compilation using `cross-rs` between macOS, Windows, Linux
 
