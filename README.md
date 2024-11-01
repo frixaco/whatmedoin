@@ -22,11 +22,12 @@
 
 **NOTE**: For Chrome, set correct Chrome executable path, make sure `openssl` and `ouch` CLI tools are available (or use alternatives)
 
-- Run `bun dev:chrome` or `bun dev:firefox`, then "Load unpacked"/"Load temporary add-on" in Chrome/Firefox
+<!-- - `openssl genrsa -out private_key.pem 2048` (Chrome requires this)
+- `bun build:chrome` and `/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --pack-extension=./chrome --pack-extension-key=./private_key.pem` to generate `chrome.crx`
+- to generate public key: `openssl rsa -in private_key.pem -pubout -out public_key.pem` -->
 
-- `openssl genrsa -out key.pem 2048` (Chrome requires this)
-- `bun build:chrome` and `/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --pack-extension=./chrome --pack-extension-key=./key.pem` to generate `chrome.crx`
-- `bun build:firefox` and `ouch c firefox/* firefox.zip && mv firefox.zip firefox.xpi` to generate `firefox.xpi`
+- For Chromium browser: Manage extensions => Load unpacked => select `chrome` folder
+- For Firefox: Debug Add-ons => Load Temporary Add-on => select `firefox` folder
 
 ## macOS system tray app: [./apps/cli-macos/whatmedoin/](./apps/cli-macos/whatmedoin/)
 

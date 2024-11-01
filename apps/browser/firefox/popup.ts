@@ -49,16 +49,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const apiUrl = (document.getElementById("api-url") as HTMLInputElement)
         .value;
 
-      browser.storage.session.set({ apiUrl });
-      // browser.runtime.sendMessage({
-      //   type: "api-url",
-      //   url: apiUrl,
-      // });
+      browser.storage.local.set({ apiUrl });
 
-      const storageValueCheck = await browser.storage.session.get("apiUrl");
+      const storageValueCheck = await browser.storage.local.get("apiUrl");
       if (storageValueCheck) {
         document.getElementById("set-api-url-status")!.innerText = "Success";
-        // make text green and remove text after 2 seconds
         document.getElementById("set-api-url-status")!.style.color = "green";
       } else {
         document.getElementById("set-api-url-status")!.innerText = "Failed";

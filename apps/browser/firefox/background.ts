@@ -3,9 +3,26 @@
 browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status == "complete" && tab.active) {
     console.log("🔵 whatmedoin processing active tab");
+
+    const allowedDomains = [
+      "guidetojapanese.org",
+      "animelon.com",
+      "youtube.com",
+    ];
+
+    const url = new URL(tab.url || "");
+    const isAllowedDomain = allowedDomains.some(
+      (domain) => url.hostname === domain || url.hostname.endsWith("." + domain)
+    );
+
+    if (!isAllowedDomain) {
+      console.log("🟡 whatmedoin: URL not in allowed domains");
+      return;
+    }
+
     try {
-      const sessionValue = await browser.storage.session.get("apiUrl");
-      const apiUrl = sessionValue.key;
+      const storageValue = await browser.storage.local.get("apiUrl");
+      const apiUrl = storageValue.apiUrl;
       if (!apiUrl || apiUrl === "") {
         console.warn("🟡 whatmedoin: No API URL provided");
         return;
