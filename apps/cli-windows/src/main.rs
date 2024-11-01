@@ -4,6 +4,7 @@ use reqwest::Client;
 use serde_json::json;
 use std::fs::OpenOptions;
 use std::io::Write;
+use std::os::windows::process::CommandExt;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::time::{self, Duration};
@@ -11,10 +12,10 @@ use x_win::{get_active_window, WindowInfo};
 
 // TODO: Confirm the names
 const TRACKED_WINDOWS: [&str; 8] = [
-    "WezTerm",
+    "wezterm-gui",
     "Cursor",
     "Slack",
-    "Anki",
+    "anki",
     "Heptabase",
     "osu!",
     "Blender",
@@ -45,11 +46,11 @@ async fn send_event(
 fn get_active_window_info() -> Option<WindowInfo> {
     match get_active_window() {
         Ok(active_window) => {
-            println!("active window: {:?}", active_window);
+            log_to_file(&format!("active window: {:?}", active_window));
             Some(active_window)
         }
         Err(e) => {
-            println!("x-win error: {:?}", e);
+            log_to_file(&format!("x-win error: {:?}", e));
             None
         }
     }
@@ -65,12 +66,15 @@ fn cli() -> Command {
         .subcommand(Command::new("stop").about("Stop the running monitor"))
         .subcommand(Command::new("install").about("Install to startup"))
         .subcommand(Command::new("uninstall").about("Remove from startup"))
+        .subcommand(Command::new("logs").about("Show logs"))
 }
 
 fn setup_logging() -> std::io::Result<PathBuf> {
     let local_app_data = std::env::var("LOCALAPPDATA").unwrap_or_else(|_| String::from(r"C:\Temp"));
     let log_dir = PathBuf::from(local_app_data).join(APP_NAME);
-    std::fs::create_dir_all(&log_dir)?;
+    if !log_dir.exists() {
+        std::fs::create_dir_all(&log_dir)?;
+    }
     let log_path = log_dir.join(format!("{}.log", APP_NAME));
     Ok(log_path)
 }
@@ -87,18 +91,15 @@ fn log_to_file(message: &str) {
 }
 
 async fn run_monitor() {
-    let mut interval = time::interval(Duration::from_secs(60));
+    let mut interval = time::interval(Duration::from_secs(60 * 15));
     let client = Client::new();
     let endpoint = "https://affectionate-compassion-production.up.railway.app/activity";
 
     log_to_file("Monitor started");
     interval.tick().await;
 
-    // Set up Ctrl+C handler
-    ctrlc::set_handler(move || {
-        RUNNING.store(false, Ordering::SeqCst);
-    })
-    .expect("Error setting Ctrl-C handler");
+    let ctrl_c = tokio::signal::ctrl_c();
+    tokio::pin!(ctrl_c);
 
     while RUNNING.load(Ordering::SeqCst) {
         tokio::select! {
@@ -112,6 +113,12 @@ async fn run_monitor() {
                         }
                     }
                 }
+            }
+            _ = &mut ctrl_c => {
+                println!("Received Ctrl+C, shutting down...");
+                log_to_file("Received Ctrl+C, shutting down...");
+                RUNNING.store(false, Ordering::SeqCst);
+                break;
             }
         }
     }
@@ -131,12 +138,11 @@ fn install_to_startup() -> std::io::Result<()> {
     let exe_path = std::env::current_exe()?;
     let shortcut_path = startup_folder.join(format!("{}.lnk", APP_NAME));
 
-    // Create shortcut using PowerShell with WindowStyle Hidden
     let ps_command = format!(
         "$WS = New-Object -ComObject WScript.Shell; \
          $SC = $WS.CreateShortcut('{}'); \
          $SC.TargetPath = 'powershell.exe'; \
-         $SC.Arguments = '-WindowStyle Hidden -Command \"\"\"Start-Process \"\"\"{}\"\"\" -ArgumentList run -WindowStyle Hidden\"\"\"'; \
+         $SC.Arguments = '-WindowStyle Hidden -Command \"\"\"$proc = Start-Process \"\"\"{}\"\"\" -ArgumentList run -WindowStyle Hidden -PassThru; $null = [System.Runtime.Interopservices.Marshal]::ReleaseComObject($proc)\"\"\"'; \
          $SC.Save()",
         shortcut_path.to_string_lossy(),
         exe_path.to_string_lossy()
@@ -151,8 +157,8 @@ fn install_to_startup() -> std::io::Result<()> {
     Ok(())
 }
 
-fn remove_from_startup() -> std::io::Result<()> {
-    let _ = stop_monitor();
+fn remove_from_startup_and_cleanup() -> std::io::Result<()> {
+    let _ = stop();
 
     let startup_folder = if let Ok(appdata) = std::env::var("APPDATA") {
         PathBuf::from(appdata).join(r"Microsoft\Windows\Start Menu\Programs\Startup")
@@ -170,47 +176,71 @@ fn remove_from_startup() -> std::io::Result<()> {
     } else {
         println!("Application was not found in startup folder");
     }
+
+    if let Ok(log_path) = setup_logging() {
+        if log_path.exists() {
+            std::fs::remove_file(&log_path)?;
+            println!("Log file removed");
+        }
+    }
+
     Ok(())
 }
 
-// Add a new function to start the process in background
-fn start_background() -> std::io::Result<()> {
-    let exe_path = std::env::current_exe()?;
-
-    // First check if the process is already running
+fn is_running() -> bool {
+    let current_pid = std::process::id();
     let check_running = std::process::Command::new("powershell")
         .arg("-Command")
         .arg(format!(
-            "Get-Process | Where-Object {{ $_.ProcessName -eq '{}' -and $_.Id -ne {} }}",
+            "Get-Process | Where-Object {{ $_.ProcessName -eq '{}' -and $_.Id -ne {} }} | Select-Object -First 1",
             APP_NAME,
-            std::process::id()
+            current_pid
         ))
-        .output()?;
+        .output();
 
-    if !check_running.stdout.is_empty() {
+    match check_running {
+        Ok(output) => {
+            let running = !output.stdout.is_empty();
+            if running {
+                std::thread::sleep(std::time::Duration::from_millis(100));
+            }
+            running
+        }
+        Err(_) => {
+            eprintln!("Failed to check if monitor is running");
+            false
+        }
+    }
+}
+
+fn start() -> std::io::Result<()> {
+    let exe_path = std::env::current_exe()?;
+
+    if is_running() {
         println!("Monitor is already running");
         return Ok(());
     }
 
-    // Use Start-Process with -NoNewWindow instead of WindowStyle Hidden
+    // Create a detached process using PowerShell
     std::process::Command::new("powershell")
         .arg("-Command")
         .arg(format!(
-            "Start-Process '{}' -ArgumentList run -NoNewWindow",
+            "$proc = Start-Process '{}' -ArgumentList run -WindowStyle Hidden -PassThru; \
+             $null = [System.Runtime.Interopservices.Marshal]::ReleaseComObject($proc)",
             exe_path.to_string_lossy()
         ))
+        .creation_flags(winapi::um::winbase::CREATE_NO_WINDOW)
         .spawn()?;
 
     println!("Application started in background");
-    std::thread::sleep(std::time::Duration::from_secs(1)); // Give time for the message to be visible
+    std::thread::sleep(std::time::Duration::from_secs(1));
     Ok(())
 }
 
-fn stop_monitor() -> std::io::Result<()> {
-    // PowerShell command to find and stop the process, excluding the current process ID
+fn stop() -> std::io::Result<()> {
     let current_pid = std::process::id();
     let ps_command = format!(
-        "Get-Process | Where-Object {{ $_.MainWindowTitle -eq '' -and $_.ProcessName -eq '{}' -and $_.Id -ne {} }} | Stop-Process",
+        "Get-Process | Where-Object {{ $_.ProcessName -eq '{}' -and $_.Id -ne {} }} | Stop-Process -Force",
         APP_NAME,
         current_pid
     );
@@ -219,6 +249,8 @@ fn stop_monitor() -> std::io::Result<()> {
         .arg("-Command")
         .arg(ps_command)
         .output()?;
+
+    std::thread::sleep(std::time::Duration::from_secs(1));
 
     if output.status.success() {
         println!("Monitor process stopped successfully");
@@ -239,12 +271,12 @@ async fn main() {
             run_monitor().await;
         }
         Some(("start", _)) => {
-            if let Err(e) = start_background() {
+            if let Err(e) = start() {
                 eprintln!("Failed to start in background: {}", e);
             }
         }
         Some(("stop", _)) => {
-            if let Err(e) = stop_monitor() {
+            if let Err(e) = stop() {
                 eprintln!("Failed to stop monitor: {}", e);
             }
         }
@@ -254,9 +286,20 @@ async fn main() {
             }
         }
         Some(("uninstall", _)) => {
-            if let Err(e) = remove_from_startup() {
+            if let Err(e) = remove_from_startup_and_cleanup() {
                 eprintln!("Failed to remove from startup: {}", e);
             }
+        }
+        Some(("logs", _)) => {
+            match std::fs::read_to_string(setup_logging().unwrap()) {
+                Ok(content) => {
+                    content.lines().for_each(|line| println!("{}", line));
+                }
+                Err(_) => {
+                    println!("log file doesn't exist");
+                }
+            }
+            println!("--------------------------------");
         }
         _ => unreachable!(),
     }
