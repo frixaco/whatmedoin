@@ -1,6 +1,6 @@
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status == "complete" && tab.active) {
-    console.log("🔵 whatmedoin processing active tab");
+    console.log("🔵 whatmedoin processing active tab", tab);
 
     const allowedDomains = [
       "guidetojapanese.org",

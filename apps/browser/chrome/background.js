@@ -1,7 +1,7 @@
 // chrome/background.ts
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status == "complete" && tab.active) {
-    console.log("\uD83D\uDD35 whatmedoin processing active tab");
+    console.log("\uD83D\uDD35 whatmedoin processing active tab", tab);
     const allowedDomains = [
       "guidetojapanese.org",
       "animelon.com",
