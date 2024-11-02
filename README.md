@@ -1,17 +1,17 @@
-# Simple app to track what I'm doing (almost) in real-time for macOS, Windows, Linux, Android, iOS, Chrome, Firefox
+## Simple app to track what I'm doing (almost) in real-time for macOS, Windows, Linux, Chrome, Firefox (Android and iOS coming soon)
 
-# Binaries
+## Binaries
 
 - [./apps/cli-macos/whatmedoin.dmg](./apps/cli-macos/whatmedoin.dmg)
 - [./apps/cli-windows/wmd.exe](./apps/cli-windows/wmd.exe)
 
 ## TODO
 
+- [ ] Make native Android and iOS apps
 - [ ] Add rate-limiting (for browser, especially)
 - [ ] Make it more "public":
   - [ ] Allow setting application names to track
   - [ ] Allow setting browser tab titles and urls to track
-- [ ] Finish setting iOS app (Info.plist, ...)
 
 ## Setup
 
@@ -44,9 +44,10 @@
   - Product > Archive > Distribute App > Custom > Clone App
 - To package as `.dmg`, put `whatmedoin.app` inside `./cli-macos` and run `bun run package`
 
-## Android app: [./apps/mobile](./apps/mobile)
+<!-- ## Android app: [./apps/mobile](./apps/mobile)
 
 - https://reactnative.dev/docs/signed-apk-android
+- Build an APK locally using either EAS, Android Studio or ./gradlew -->
 
 ## Tracks
 
@@ -79,11 +80,13 @@
   - Tauri with x-win crate - crashes for some reason
   - NPM lib: https://github.com/paymoapp/active-window - works, wanted lightweight CLI and daemon solution
   - Bun + C => executable - works, wasn't sure how to turn it into a daemon
-  - Flutter - works, couldn't get the foreground window detection working reliably, wanted lightweight CLI and daemon solution
+  - Flutter - works, couldn't get the foreground window detection working reliably, also wanted lightweight CLI and daemon solution
   - Rust CLI with x-win [✓]
+  - Native macOS app [✓]
 - Android/iOS:
-  - Flutter - works and was easier to setup than RN
-  - React Native app that's always running [✓]
+  - Flutter - works and was easier to setup than RN, might switch later
+  - React Native app that's always running - couldn't get the background service working
+  - Native Android app - too much work, might switch later
 - API
   - Bun + Hono [✓]
   - Rust + Tide - might switch later
