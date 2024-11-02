@@ -38,13 +38,15 @@ app.post("/activity", async (c) => {
   });
   const savedResult = result.toObject();
 
-  console.log("db result: ", savedResult);
+  console.log("saved result: ", savedResult);
   return c.json(savedResult, 201);
 });
 
 app.get("/activity", async (c) => {
-  const result = await Activity.find().sort({ date: -1 }).limit(1);
-  return c.json(result[0]);
+  const result = await Activity.findOne().sort({ _id: -1 });
+
+  console.log("activity result: ", result);
+  return c.json(result);
 });
 
 export default app;
