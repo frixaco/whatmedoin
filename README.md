@@ -44,6 +44,10 @@
   - Product > Archive > Distribute App > Custom > Clone App
 - To package as `.dmg`, put `whatmedoin.app` inside `./cli-macos` and run `bun run package`
 
+## Android app: [./apps/mobile](./apps/mobile)
+
+- https://reactnative.dev/docs/signed-apk-android
+
 ## Tracks
 
 - macOS, Windows, Linux
