@@ -1,8 +1,5 @@
 {
   "svelte.enable-ts-plugin": true,
   "rust-analyzer.checkOnSave": true,
-  "rust-analyzer.linkedProjects": [
-    "apps/cli-unix/Cargo.toml",
-    "apps/cli-windows/Cargo.toml"
-  ]
+  "rust-analyzer.linkedProjects": ["apps/cli-windows/Cargo.toml"]
 }
