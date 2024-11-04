@@ -12,13 +12,13 @@ browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
 async function handleTabChange(tabId: number) {
   const tab = await browser.tabs.get(tabId);
-  if (!tab.url) return;
+  if (!tab.url || !tab.active) return;
 
   const allowedDomains = ["guidetojapanese.org", "animelon.com", "youtube.com"];
 
   const url = new URL(tab.url);
   const isAllowedDomain = allowedDomains.some(
-    (domain) => url.hostname === domain || url.hostname.endsWith("." + domain)
+    (domain) => url.hostname === domain || url.hostname.endsWith("." + domain),
   );
 
   if (!isAllowedDomain) {

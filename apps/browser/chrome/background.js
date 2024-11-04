@@ -11,7 +11,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 });
 async function handleTabChange(tabId) {
   const tab = await chrome.tabs.get(tabId);
-  if (!tab.url)
+  if (!tab.url || !tab.active)
     return;
   const allowedDomains = ["guidetojapanese.org", "animelon.com", "youtube.com"];
   const url = new URL(tab.url);
