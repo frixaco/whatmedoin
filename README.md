@@ -1,9 +1,10 @@
 ## Simple app to track what I'm doing (almost) in real-time for macOS, Windows, Linux, Chrome, Firefox (Android and iOS coming soon)
 
-## Binaries
+## Builds
 
 - [./apps/cli-macos/whatmedoin.dmg](./apps/cli-macos/whatmedoin.dmg)
 - [./apps/cli-windows/wmd.exe](./apps/cli-windows/wmd.exe)
+- [./apps/browser/chrome](./apps/browser/chrome) and [./apps/browser/firefox](./apps/browser/firefox)
 
 ## TODO
 
@@ -36,6 +37,7 @@
 
 - For Chromium browser: Manage extensions => Load unpacked => select `chrome` folder
 - For Firefox: Debug Add-ons => Load Temporary Add-on => select `firefox` folder
+- Open the extension popup and set API URL
 
 ## macOS system tray app: [./apps/cli-macos/whatmedoin/](./apps/cli-macos/whatmedoin/)
 
@@ -81,18 +83,19 @@
   - NPM lib: https://github.com/paymoapp/active-window - works, wanted lightweight CLI and daemon solution
   - Bun + C => executable - works, wasn't sure how to turn it into a daemon
   - Flutter - works, couldn't get the foreground window detection working reliably, also wanted lightweight CLI and daemon solution
-  - Rust CLI with x-win [✓]
-  - Native macOS app [✓]
+  - Rust CLI with x-win (Windows) [✓]
+  - Native macOS app (macOS) [✓]
 - Android/iOS:
   - Flutter - works and was easier to setup than RN, might switch later
   - React Native app that's always running - couldn't get the background service working
   - Native Android app - too much work, might switch later
 - API
-  - Bun + Hono [✓]
+  - Go + Echo [✓]
+  - Bun + Hono - too much memory usage
   - Rust + Tide - might switch later
 - Browser extension
   - Vanilla JS/TS with Bun [✓]
-  - Rust + WASM - have to compile to JS at the end, so no
+  - Rust + WASM - have to compile to JS at the end anyway
 
 ## Research - enable cross compilation using `cross-rs` between macOS, Windows, Linux
 
