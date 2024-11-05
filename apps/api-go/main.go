@@ -27,17 +27,17 @@ func isValidPlatform(platform string) bool {
 	return platform == "browser" || platform == "mobile" || platform == "windows" || platform == "macos"
 }
 
-func getLatestActivity(db *mongo.Collection, act *Activity) error {
+func getLatestActivity(c echo.Context, db *mongo.Collection, act *Activity) error {
 	opts := options.FindOne().SetSort(bson.D{{Key: "_id", Value: -1}})
-	err := db.FindOne(context.TODO(), bson.D{}, opts).Decode(act)
+	err := db.FindOne(c.Request().Context(), bson.D{}, opts).Decode(act)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func saveActivity(db *mongo.Collection, act *Activity) error {
-	result, err := db.InsertOne(context.TODO(), act)
+func saveActivity(c echo.Context, db *mongo.Collection, act *Activity) error {
+	result, err := db.InsertOne(c.Request().Context(), act)
 	if err != nil {
 		return err
 	}
@@ -46,8 +46,8 @@ func saveActivity(db *mongo.Collection, act *Activity) error {
 	return nil
 }
 
-func cleanUpActivities(db *mongo.Collection, la *Activity) error {
-	err := getLatestActivity(db, la)
+func cleanUpActivities(c echo.Context, db *mongo.Collection, la *Activity) error {
+	err := getLatestActivity(c, db, la)
 	if err != nil {
 		return err
 	}
@@ -87,7 +87,7 @@ func main() {
 	e.GET("/activity", func(c echo.Context) error {
 		var activity Activity
 		db := mongoClient.Database("test").Collection("activities")
-		err := getLatestActivity(db, &activity)
+		err := getLatestActivity(c, db, &activity)
 		if err != nil {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
@@ -107,7 +107,7 @@ func main() {
 		}
 
 		db := mongoClient.Database("test").Collection("activities")
-		saveActivity(db, &activity)
+		saveActivity(c, db, &activity)
 
 		return c.JSON(http.StatusCreated, activity)
 	})
@@ -115,7 +115,7 @@ func main() {
 	e.DELETE("/activity", func(c echo.Context) error {
 		db := mongoClient.Database("test").Collection("activities")
 		var lastActivity Activity
-		err := cleanUpActivities(db, &lastActivity)
+		err := cleanUpActivities(c, db, &lastActivity)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
