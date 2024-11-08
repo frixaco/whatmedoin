@@ -93,7 +93,7 @@ fn log_to_file(message: &str) {
 async fn run_monitor() {
     let mut interval = time::interval(Duration::from_secs(60 * 15));
     let client = Client::new();
-    let endpoint = "https://affectionate-compassion-production.up.railway.app/activity";
+    let endpoint = "https://api.whatmedoin.frixaco.com/activity";
 
     log_to_file("Monitor started");
     interval.tick().await;

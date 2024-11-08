@@ -9,12 +9,15 @@ export const cleanupTask = schedules.task({
   maxDuration: 300, // 5 minutes
   run: async (payload, { ctx }) => {
     console.log(
-      "Starting deleting all records except last one from whatmedoin database",
+      "Starting deleting all records except last one from whatmedoin database"
     );
 
-    const response = await fetch("https://api.frixaco.com/activity", {
-      method: "DELETE",
-    });
+    const response = await fetch(
+      "https://api.whatmedoin.frixaco.com/activity",
+      {
+        method: "DELETE",
+      }
+    );
     const data = await response.json();
 
     console.log("Finished database cleanup. Last activity:", data);

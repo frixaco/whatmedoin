@@ -137,7 +137,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func sendToAPI(title: String, url: String) {
-        guard let apiUrl = URL(string: "https://api.frixaco.com/activity") else { return }
+        guard let apiUrl = URL(string: "https://api.whatmedoin.frixaco.com/activity") else { return }
         
         var request = URLRequest(url: apiUrl)
         request.httpMethod = "POST"
