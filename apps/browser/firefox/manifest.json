@@ -3,7 +3,7 @@
   "name": "whatmedoin",
   "description": "",
   "version": "1.0",
-  "permissions": ["tabs", "webNavigation", "storage", "windows"],
+  "permissions": ["webNavigation", "storage", "tabs"],
   "host_permissions": [
     "http://localhost/*",
     "https://*.up.railway.app/*",

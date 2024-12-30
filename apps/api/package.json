@@ -1,0 +1,16 @@
+{
+  "name": "api",
+  "type": "module",
+  "module": "server.ts",
+  "scripts": {
+    "dev": "bun run --hot server.ts",
+    "build": "bun build ./server.ts --target=bun --outfile=server.js"
+  },
+  "dependencies": {
+    "hono": "^4.6.5",
+    "mongoose": "^8.7.2"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.11"
+  }
+}
