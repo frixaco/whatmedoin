@@ -10,8 +10,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::time::{self, Duration};
 use x_win::{get_active_window, WindowInfo};
 
-// TODO: Confirm the names
-const TRACKED_WINDOWS: [&str; 8] = [
+// // TODO: Confirm the names
+const TRACKED_WINDOWS: [&str; 10] = [
     "wezterm-gui",
     "Cursor",
     "Slack",
@@ -20,6 +20,8 @@ const TRACKED_WINDOWS: [&str; 8] = [
     "osu!",
     "Blender",
     "pwsh",
+    "krita",
+    "Obsidian",
 ];
 
 static RUNNING: AtomicBool = AtomicBool::new(true);
@@ -46,11 +48,12 @@ async fn send_event(
 fn get_active_window_info() -> Option<WindowInfo> {
     match get_active_window() {
         Ok(active_window) => {
-            log_to_file(&format!("active window: {:?}", active_window));
+            // log_to_file(&format!("active window: {:?}", active_window));
             Some(active_window)
         }
         Err(e) => {
-            log_to_file(&format!("x-win error: {:?}", e));
+            // log_to_file(&format!("x-win error: {:?}", e));
+            println!("x-win error: {:?}", e);
             None
         }
     }

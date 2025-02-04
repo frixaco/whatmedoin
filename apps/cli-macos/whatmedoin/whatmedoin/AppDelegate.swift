@@ -70,7 +70,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 let path = windowInfo.path ?? "No Path"
                 print("[\(timestamp)] App: \(appName) - Window: \(title) - Path: \(path)")
                 
-                let trackedApps = ["WezTerm", "Cursor", "Slack", "Anki", "Heptabase"]
+                let trackedApps = ["WezTerm", "Cursor", "Slack", "Anki", "Heptabase", "Obsidian"]
                 if trackedApps.contains(appName) {
                     self.sendToAPI(title: appName, url: path)
                 }
