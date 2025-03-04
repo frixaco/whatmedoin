@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/profclems/go-dotenv"
@@ -25,31 +25,33 @@ func isValidPlatform(platform string) bool {
 	return platform == "browser" || platform == "mobile" || platform == "windows" || platform == "macos"
 }
 
-func getLatestActivity(c echo.Context, db *pgx.Conn, act *Activity) error {
-	err := db.QueryRow(context.Background(), "select * from activities order by id desc limit 1").Scan(&act.Id, &act.Platform, &act.Title, &act.Url, &act.Date)
+func getLatestActivity(c echo.Context, pool *pgxpool.Pool, act *Activity) error {
+	ctx := c.Request().Context()
+	err := pool.QueryRow(ctx, "select id, platform, title, url, date AT TIME ZONE 'UTC' from activities order by id desc limit 1").Scan(&act.Id, &act.Platform, &act.Title, &act.Url, &act.Date)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func saveActivity(c echo.Context, db *pgx.Conn, act *Activity) error {
-	fmt.Println("Saving activity", act.Date)
-	_, err := db.Exec(context.Background(), "insert into activities (platform, title, url, date) values ($1, $2, $3, $4) returning id", act.Platform, act.Title, act.Url, act.Date)
+func saveActivity(c echo.Context, pool *pgxpool.Pool, act *Activity) error {
+	ctx := c.Request().Context()
+	fmt.Println("Saving activity with date:", act.Date)
+	_, err := pool.Exec(ctx, "insert into activities (platform, title, url, date) values ($1, $2, $3, $4::timestamp) returning id", act.Platform, act.Title, act.Url, act.Date)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
-func cleanUpActivities(c echo.Context, db *pgx.Conn, la *Activity) error {
-	err := getLatestActivity(c, db, la)
+func cleanUpActivities(c echo.Context, pool *pgxpool.Pool, la *Activity) error {
+	ctx := c.Request().Context()
+	err := getLatestActivity(c, pool, la)
 	if err != nil {
 		return err
 	}
 
-	_, err = db.Exec(context.Background(), "delete from activities where id = $1", la.Id)
+	_, err = pool.Exec(ctx, "delete from activities where id = $1", la.Id)
 	if err != nil {
 		return err
 	}
@@ -70,12 +72,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	dbConn, err := pgx.Connect(context.Background(), dbUrl)
+	pool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Unable to create connection pool: %v\n", err)
 		os.Exit(1)
 	}
-	defer dbConn.Close(context.Background())
+	defer pool.Close()
 
 	e := echo.New()
 
@@ -87,7 +89,7 @@ func main() {
 	e.GET("/activity", func(c echo.Context) error {
 		var activity Activity
 
-		err := getLatestActivity(c, dbConn, &activity)
+		err := getLatestActivity(c, pool, &activity)
 		if err != nil {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
@@ -100,22 +102,29 @@ func main() {
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
-		activity.Date = time.Now().UTC()
+
+		// Set the current time with full timestamp precision
+		now := time.Now().UTC()
+		fmt.Println("Setting activity time to:", now)
+		activity.Date = now
 
 		if !isValidPlatform(activity.Platform) {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid platform"})
 		}
 
-		saveActivity(c, dbConn, &activity)
+		err = saveActivity(c, pool, &activity)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
 
 		return c.JSON(http.StatusCreated, activity)
 	})
 
 	e.DELETE("/activity", func(c echo.Context) error {
 		var lastActivity Activity
-		err := cleanUpActivities(c, dbConn, &lastActivity)
+		err := cleanUpActivities(c, pool, &lastActivity)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 
 		return c.JSON(http.StatusOK, lastActivity)
