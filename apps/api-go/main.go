@@ -2,80 +2,80 @@ package main
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"net/http"
+	"os"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/profclems/go-dotenv"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Activity struct {
-	ID       primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	Platform string             `json:"platform"`
-	Title    string             `json:"title"`
-	Url      string             `json:"url"`
-	Date     string             `json:"date"`
+	Id       int64     `json:"id"`
+	Platform string    `json:"platform"`
+	Title    string    `json:"title"`
+	Url      string    `json:"url"`
+	Date     time.Time `json:"date"`
 }
 
 func isValidPlatform(platform string) bool {
 	return platform == "browser" || platform == "mobile" || platform == "windows" || platform == "macos"
 }
 
-func getLatestActivity(c echo.Context, db *mongo.Collection, act *Activity) error {
-	opts := options.FindOne().SetSort(bson.D{{Key: "_id", Value: -1}})
-	err := db.FindOne(c.Request().Context(), bson.D{}, opts).Decode(act)
+func getLatestActivity(c echo.Context, db *pgx.Conn, act *Activity) error {
+	err := db.QueryRow(context.Background(), "select * from activities order by id desc limit 1").Scan(&act.Id, &act.Platform, &act.Title, &act.Url, &act.Date)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func saveActivity(c echo.Context, db *mongo.Collection, act *Activity) error {
-	result, err := db.InsertOne(c.Request().Context(), act)
+func saveActivity(c echo.Context, db *pgx.Conn, act *Activity) error {
+	fmt.Println("Saving activity", act.Date)
+	_, err := db.Exec(context.Background(), "insert into activities (platform, title, url, date) values ($1, $2, $3, $4) returning id", act.Platform, act.Title, act.Url, act.Date)
 	if err != nil {
 		return err
 	}
 
-	act.ID = result.InsertedID.(primitive.ObjectID)
 	return nil
 }
 
-func cleanUpActivities(c echo.Context, db *mongo.Collection, la *Activity) error {
+func cleanUpActivities(c echo.Context, db *pgx.Conn, la *Activity) error {
 	err := getLatestActivity(c, db, la)
 	if err != nil {
 		return err
 	}
 
-	filter := bson.M{
-		"_id": bson.M{
-			"$ne": la.ID,
-		},
+	_, err = db.Exec(context.Background(), "delete from activities where id = $1", la.Id)
+	if err != nil {
+		return err
 	}
-	db.DeleteMany(context.TODO(), filter)
 
 	return nil
 }
 
-var mongoClient *mongo.Client
-
 func main() {
-	dotenv.Load()
-
-	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Second)
-	defer cancel()
-
-	_client, err := mongo.Connect(ctx, options.Client().ApplyURI(dotenv.GetString("DATABASE_URL")))
+	dotenv.SetConfigFile(".env")
+	err := dotenv.Load()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintf(os.Stderr, "Error loading .env file: %v\n", err)
 	}
-	defer _client.Disconnect(ctx)
-	mongoClient = _client
+
+	dbUrl := dotenv.GetString("DATABASE_URL")
+	if dbUrl == "" {
+		fmt.Fprintf(os.Stderr, "DATABASE_URL environment variable is not set\n")
+		os.Exit(1)
+	}
+
+	dbConn, err := pgx.Connect(context.Background(), dbUrl)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		os.Exit(1)
+	}
+	defer dbConn.Close(context.Background())
 
 	e := echo.New()
 
@@ -86,8 +86,8 @@ func main() {
 
 	e.GET("/activity", func(c echo.Context) error {
 		var activity Activity
-		db := mongoClient.Database("test").Collection("activities")
-		err := getLatestActivity(c, db, &activity)
+
+		err := getLatestActivity(c, dbConn, &activity)
 		if err != nil {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 		}
@@ -100,22 +100,20 @@ func main() {
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
-		activity.Date = time.Now().UTC().Format("1/2/2006, 3:04:05 PM")
+		activity.Date = time.Now().UTC()
 
 		if !isValidPlatform(activity.Platform) {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid platform"})
 		}
 
-		db := mongoClient.Database("test").Collection("activities")
-		saveActivity(c, db, &activity)
+		saveActivity(c, dbConn, &activity)
 
 		return c.JSON(http.StatusCreated, activity)
 	})
 
 	e.DELETE("/activity", func(c echo.Context) error {
-		db := mongoClient.Database("test").Collection("activities")
 		var lastActivity Activity
-		err := cleanUpActivities(c, db, &lastActivity)
+		err := cleanUpActivities(c, dbConn, &lastActivity)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
