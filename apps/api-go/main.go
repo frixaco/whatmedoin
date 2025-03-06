@@ -51,7 +51,7 @@ func cleanUpActivities(c echo.Context, pool *pgxpool.Pool, la *Activity) error {
 		return err
 	}
 
-	_, err = pool.Exec(ctx, "delete from activities where id = $1", la.Id)
+	_, err = pool.Exec(ctx, "delete from activities where id != $1", la.Id)
 	if err != nil {
 		return err
 	}

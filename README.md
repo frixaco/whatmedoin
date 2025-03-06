@@ -71,10 +71,23 @@
     - Slack
     - Anki
     - Heptabase
+    - Krita
+    - Obsidian
 
 - Android/iOS - If requests are coming to server, then I'm on my phone
 
 - No update means I'm AFK
+
+## Database cleanup
+
+I'm using Railway Functions. Create a Function, disable Serverless toggle to allow using them as Cron jobs. Paste this code and deploy:
+
+```ts
+const response = await fetch("https://api.whatmedoin.frixaco.com/activity", {
+  method: "DELETE",
+});
+console.log(await response.json());
+```
 
 ## Solutions tried
 

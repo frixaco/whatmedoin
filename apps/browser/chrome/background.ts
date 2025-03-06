@@ -18,7 +18,7 @@ async function handleTabChange(tabId: number) {
 
   const url = new URL(tab.url);
   const isAllowedDomain = allowedDomains.some(
-    (domain) => url.hostname === domain || url.hostname.endsWith("." + domain),
+    (domain) => url.hostname === domain || url.hostname.endsWith("." + domain)
   );
 
   if (!isAllowedDomain) {
