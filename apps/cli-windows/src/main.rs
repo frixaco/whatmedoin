@@ -34,8 +34,9 @@ async fn send_event(
 ) -> Result<(), reqwest::Error> {
     let _ = client
         .post(endpoint)
+        .header("Content-Type", "application/json")
         .json(&json!({
-            "platform": "desktop",
+            "platform": "windows",
             "title": active_window.info.name,
             "url": active_window.info.path,
         }))
@@ -111,7 +112,7 @@ async fn run_monitor() {
                 if let Some(window_info) = get_active_window_info() {
                     if TRACKED_WINDOWS.contains(&window_info.info.name.as_str()) {
                         match send_event(&client, endpoint, &window_info).await {
-                            Ok(_) => log_to_file("Successfully sent window info"),
+                            Ok(_) => log_to_file(&format!("Successfully sent window info: {}", window_info.info.name)),
                             Err(e) => log_to_file(&format!("Failed to send window info: {:?}", e)),
                         }
                     }
