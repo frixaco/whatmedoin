@@ -5,7 +5,7 @@ target
 
 *.pem
 *.crx
-*.xpi
+!*.xpi
 
 .env*
 !.env.local
