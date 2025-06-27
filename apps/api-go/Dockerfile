@@ -1,0 +1,39 @@
+# Build stage
+FROM golang:1.24-alpine AS builder
+
+WORKDIR /app
+
+# Copy go mod files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Build the binary
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+
+# Final stage
+FROM alpine:latest
+
+# Install ca-certificates for HTTPS requests
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /app
+
+# Create data directory for activities file
+RUN mkdir -p /data
+
+# Copy the binary from builder stage
+COPY --from=builder /app/main .
+
+# Create volume mount point for data persistence
+VOLUME ["/data"]
+
+# Expose port
+EXPOSE 3000
+
+# Run the binary
+CMD ["./main"]
