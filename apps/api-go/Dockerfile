@@ -29,9 +29,6 @@ RUN mkdir -p /data
 # Copy the binary from builder stage
 COPY --from=builder /app/main .
 
-# Create volume mount point for data persistence
-VOLUME ["/data"]
-
 # Expose port
 EXPOSE 3000
 
