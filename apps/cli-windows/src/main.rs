@@ -11,7 +11,7 @@ use tokio::time::{self, Duration};
 use x_win::{get_active_window, WindowInfo};
 
 // // TODO: Confirm the names
-const TRACKED_WINDOWS: [&str; 10] = [
+const TRACKED_WINDOWS: [&str; 12] = [
     "wezterm-gui",
     "Cursor",
     "Slack",
@@ -22,6 +22,8 @@ const TRACKED_WINDOWS: [&str; 10] = [
     "pwsh",
     "krita",
     "Obsidian",
+    "Code",
+    "kitty",
 ];
 
 static RUNNING: AtomicBool = AtomicBool::new(true);
@@ -95,7 +97,7 @@ fn log_to_file(message: &str) {
 }
 
 async fn run_monitor() {
-    let mut interval = time::interval(Duration::from_secs(60 * 15));
+    let mut interval = time::interval(Duration::from_secs(10));
     let client = Client::new();
     let endpoint = "https://api.whatmedoin.frixaco.com/activity";
 
