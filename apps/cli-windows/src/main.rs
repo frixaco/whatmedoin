@@ -5,24 +5,26 @@ use serde_json::json;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::os::windows::process::CommandExt;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::time::{self, Duration};
 use x_win::{get_active_window, WindowInfo};
 
-// // TODO: Confirm the names
-const TRACKED_WINDOWS: [&str; 12] = [
+const TRACKED_APPLICATIONS: [&str; 15] = [
+    "wezterm",
     "wezterm-gui",
-    "Cursor",
-    "Slack",
+    "cursor",
+    "slack",
     "anki",
-    "Heptabase",
+    "heptabase",
     "osu!",
-    "Blender",
+    "blender",
     "pwsh",
+    "powershell",
     "krita",
-    "Obsidian",
-    "Code",
+    "obsidian",
+    "code",
+    "visual studio code",
     "kitty",
 ];
 
@@ -60,6 +62,23 @@ fn get_active_window_info() -> Option<WindowInfo> {
             None
         }
     }
+}
+
+fn should_track(window_info: &WindowInfo) -> bool {
+    let mut candidates = Vec::new();
+    candidates.push(window_info.info.name.to_ascii_lowercase());
+
+    let path = Path::new(&window_info.info.path);
+    if let Some(file_name) = path.file_name().and_then(|value| value.to_str()) {
+        candidates.push(file_name.to_ascii_lowercase());
+    }
+    if let Some(stem) = path.file_stem().and_then(|value| value.to_str()) {
+        candidates.push(stem.to_ascii_lowercase());
+    }
+
+    candidates
+        .into_iter()
+        .any(|candidate| TRACKED_APPLICATIONS.contains(&candidate.as_str()))
 }
 
 fn cli() -> Command {
@@ -112,7 +131,7 @@ async fn run_monitor() {
             _ = interval.tick() => {
                 log_to_file("Checking active window...");
                 if let Some(window_info) = get_active_window_info() {
-                    if TRACKED_WINDOWS.contains(&window_info.info.name.as_str()) {
+                    if should_track(&window_info) {
                         match send_event(&client, endpoint, &window_info).await {
                             Ok(_) => log_to_file(&format!("Successfully sent window info: {}", window_info.info.name)),
                             Err(e) => log_to_file(&format!("Failed to send window info: {:?}", e)),

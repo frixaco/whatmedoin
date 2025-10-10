@@ -7,7 +7,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var isMonitoring = true
     private var lastWindowInfo: (title: String?, appName: String?, path: String?)? // Store last window info
     private var lastWindowMenuItem: NSMenuItem? // Reference to menu item
-    
+    private let trackingInterval: TimeInterval = 10
+    private let trackedApplications: Set<String> = [
+        "wezterm",
+        "wezterm-gui",
+        "cursor",
+        "slack",
+        "anki",
+        "heptabase",
+        "osu!",
+        "blender",
+        "pwsh",
+        "powershell",
+        "krita",
+        "obsidian",
+        "code",
+        "visual studio code",
+        "kitty"
+    ]
+
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         setupStatusBarItem()
         requestPermissions()
@@ -55,26 +73,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func startWindowTitleMonitoring() {
-        timer = Timer.scheduledTimer(withTimeInterval: 15 * 60, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: trackingInterval, repeats: true) { [weak self] _ in
             guard let self = self, self.isMonitoring else { return }
-            
+
             let windowInfo = self.getForegroundWindowInfo()
             self.lastWindowInfo = windowInfo
-            
+
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
             let timestamp = dateFormatter.string(from: Date())
-            
+
             if let appName = windowInfo.appName {
                 let title = windowInfo.title ?? "No Title"
-                let path = windowInfo.path ?? "No Path"
-                print("[\(timestamp)] App: \(appName) - Window: \(title) - Path: \(path)")
-                
-                let trackedApps = ["WezTerm", "Cursor", "Slack", "Anki", "Heptabase", "Obsidian"]
-                if trackedApps.contains(appName) {
-                    self.sendToAPI(title: appName, url: path)
+                let rawPath = windowInfo.path
+                let pathDescription = rawPath ?? "No Path"
+                print("[\(timestamp)] App: \(appName) - Window: \(title) - Path: \(pathDescription)")
+
+                if self.shouldTrack(appName: appName, path: rawPath) {
+                    self.sendToAPI(title: appName, url: pathDescription)
                 }
-                
+
                 DispatchQueue.main.async {
                     self.updateLastWindowMenuItem()
                 }
@@ -129,6 +147,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
     
+    private func shouldTrack(appName: String?, path: String?) -> Bool {
+        var candidates = Set<String>()
+
+        if let app = appName?.lowercased() {
+            candidates.insert(app)
+        }
+
+        if let path = path {
+            let url = URL(fileURLWithPath: path)
+            candidates.insert(url.lastPathComponent.lowercased())
+            candidates.insert(url.deletingPathExtension().lastPathComponent.lowercased())
+        }
+
+        return candidates.contains { trackedApplications.contains($0) }
+    }
+
     @objc func toggleMonitoring() {
         isMonitoring.toggle()
         if let menuItem = statusItem?.menu?.items.first(where: { $0.action == #selector(toggleMonitoring) }) {
